@@ -1,4 +1,4 @@
-********************1. 2020 policy********************
+********************2020 policy shock********************
 use "E:\ESG\data\RAW_data\Huazheng_data_wind2.dta", clear
 bysort year: egen ESG_median = median(ESG_score)
 gen treated = 0 

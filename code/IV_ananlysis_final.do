@@ -1,3 +1,4 @@
+********gen AQI dataset*******
 //gen AQI day data
 use "E:\ESG\data\AQI\CSMAR\AQI_day\AQI2001-2023_day.dta", clear
 winsor2 AQI, replace cuts(1 99)
@@ -32,22 +33,10 @@ drop match CityCode CityName _merge
 drop if id  == .
 
 **********IV1: AQI **********
-ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = healthyday), absorb(id year) cluster (id)  first  //week IV
+ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = healthyday), absorb(id year) cluster (id)  first  
+ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = moderate_sum), absorb(id year) cluster (id)  first 
 
-ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = moderate_sum), absorb(id year) cluster (id)  first  //week IV
-
-****IV2: ESG initial score *****
-sort id year
-bys id: gen t = _n
-gen ESG_score_t1 = ESG_score if t==1
-bysort id : egen ESG_score_initial = min(ESG_score_t1)  //initial ESG
-egen n = count(code) if t==1
-egen i = rank(ESG_score_initial) if t==1, track 
-gen pcrank = (i - 1) / (n - 1)  if t==1
-bysort id : egen pcrank2 = min(pcrank) //percentile rank 
-ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = pcrank2), absorb(industry_CSRC year) cluster (id) first //control industry FE: coeffient is negative
-
-****IV3: industry ESG average score *****
+****IV2: industry ESG average score *****
 //average(omit own value)
 ////industry-both good:GB2,industry_SW3
 bysort GB3 year : egen total_GB3=total(ESG_score)
@@ -83,7 +72,7 @@ gen mean_SW3=total_no_SW3/(number_SW3-1)
 ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = mean_SW3 ), absorb(id year) cluster (id) first //p0.062
 
 
-****IV4: region ESG average score *****
+****IV3: region ESG average score *****
 /////region
 bysort City year: egen total_City=total(ESG_score)
 replace total_City = . if City =="#N/A"
@@ -96,11 +85,8 @@ gen mean_city=total_no_city/(number_city-1)
 ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = mean_city ), absorb(id year) cluster (id) first  //0.140 
 
 
-//shi,province:not sig
-
-
 **********Sum: many IV***********
-//two IV
+///////two IV
 //total
 ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = mean_GB2 mean_city), absorb(id year) cluster (id) 
 ivreghdfe IO1 beta ln_size ln_PB ROE (ln_Gscore = mean_GB2 mean_city), absorb(id year) cluster (id) 
@@ -110,17 +96,11 @@ ivreghdfe Fund1 beta ln_size ln_PB ROE (ln_ESGscore = mean_GB2 mean_city), absor
 ivreghdfe Fund1 beta ln_size ln_PB ROE (ln_Gscore = mean_GB2 mean_city), absorb(id year) cluster (id) 
 
 
-//three IV:moderate day is better(than health day)
+///////three IV:moderate day is better(than healthy day)
 gen moderate_day = moderate_sum/100 //make coeff biggger
 //total
 ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = mean_GB2 mean_city moderate_day), absorb(id year) cluster (id) 
 esttab using "E:\ESG\data\result\Huazheng_result_final\IV_total1.csv", scalar(F) b(3) se(3) star(* .10 ** .05 *** .01) nogaps noconstant n replace
-
-//two stages output
-ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = mean_GB2 mean_city moderate_day), absorb(id year) cluster (id) first savefirst savefprefix(f) //5% sig
-eststo
-estadd scalar F = `e(widstat)' : fln_ESGscore
-esttab fln_ESGscore est1 using "E:\ESG\data\result\Huazheng_result_final\IV_twostages.csv", scalar(F) drop(beta ln_size ln_PB ROE) b(3) se(3) star(* .10 ** .05 *** .01) nogaps noconstant n replace 
 
 ivreghdfe IO1 beta ln_size ln_PB ROE (ln_Escore = mean_GB2 mean_city moderate_day), absorb(id year) cluster (id) 
 esttab using "E:\ESG\data\result\Huazheng_result_final\IV_total2.csv", scalar(F) b(3) se(3) star(* .10 ** .05 *** .01) nogaps noconstant n replace
@@ -130,6 +110,13 @@ esttab using "E:\ESG\data\result\Huazheng_result_final\IV_total3.csv", scalar(F)
 
 ivreghdfe IO1 beta ln_size ln_PB ROE (ln_Gscore = mean_GB2 mean_city moderate_day), absorb(id year) cluster (id) 
 esttab using "E:\ESG\data\result\Huazheng_result_final\IV_total4.csv", scalar(F) b(3) se(3) star(* .10 ** .05 *** .01) nogaps noconstant n replace
+
+//two stages output
+ivreghdfe IO1 beta ln_size ln_PB ROE (ln_ESGscore = mean_GB2 mean_city moderate_day), absorb(id year) cluster (id) first savefirst savefprefix(f) //5% sig
+eststo
+estadd scalar F = `e(widstat)' : fln_ESGscore
+esttab fln_ESGscore est1 using "E:\ESG\data\result\Huazheng_result_final\IV_twostages.csv", scalar(F) drop(beta ln_size ln_PB ROE) b(3) se(3) star(* .10 ** .05 *** .01) nogaps noconstant n replace 
+
 
 //fund
 ivreghdfe Fund1 beta ln_size ln_PB ROE (ln_ESGscore= mean_GB2 mean_city moderate_day), absorb(id year) cluster (id) 

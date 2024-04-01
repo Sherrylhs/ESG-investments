@@ -1,5 +1,5 @@
 # ESG-investments
-This is the code and data for the essay "Heterogeneous institutional preferences for corporate ESG investments":  
+This is the code and data for the essay "Heterogeneous institutional preferences for corporate ESG investments".Since the paper has not been published yet, the main research conclusions are available upon request.
 
 *1. code*   
 This file provides four stata code for this essay. The file structure is as follows:  

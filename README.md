@@ -2,7 +2,7 @@
 This is the code and data for the essay "Heterogeneous institutional preferences for corporate ESG investments". Since the paper has not been published yet, the main research conclusions are available upon request.
 
 *1. code*   
-This file provides four stata code for this essay. The file structure is as follows:  
+This file provides main code for this essay:  
   "baseline_analysis.do": code for baseline regression.
   "IV_ananlysis_final.do": code for IV analysis in endogeneity checks.  
   "DID_analysis_final.do": code for DID model in endogeneity checks.  
